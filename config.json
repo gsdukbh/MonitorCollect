@@ -1,0 +1,11 @@
+{
+  "server_port": "8080",
+  "database": {
+    "user": "telegraf_user",
+    "password": "telegraf_password",
+    "host": "127.0.0.1",
+    "port": "3306",
+    "db_name": "dataCenter"
+  },
+  "log_level": "info"
+}

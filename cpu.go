@@ -80,7 +80,6 @@ func (c *CPUFields) FromFieldsMap(m map[string]interface{}) error {
 }
 
 // SaveCPUToDB 保存 CPU 数据到数据库
-
 func SaveCPUToDB(metric *TelegrafJson) {
 	var cpuFields CPUFields
 	if err := cpuFields.FromFieldsMap(metric.Fields); err != nil {
@@ -95,4 +94,10 @@ func SaveCPUToDB(metric *TelegrafJson) {
 		metric.Timestamp,    // 时间戳
 		cpuFields,           // CPU 指标
 	)
+	// 保存到数据库
+	if err := db.Create(&cpuDb).Error; err != nil {
+		log.Printf("保存 CPU 数据到数据库出错: %v", err)
+		return
+	}
+
 }

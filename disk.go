@@ -1,6 +1,9 @@
 package main
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"log"
+)
 
 // DiskFields 表示磁盘使用情况统计
 // 处理telegraf 采集的磁盘数据
@@ -73,4 +76,29 @@ func (d *DiskFields) FromFieldsMap(m map[string]interface{}) error {
 		return err
 	}
 	return json.Unmarshal(b, d)
+}
+
+// SaveDiskInfo2DB 将解析后的 Disk 信息保存到数据库
+func SaveDiskInfo2DB(telegrafJson *TelegrafJson) {
+	// 1. 解析 fields
+	var diskFields DiskFields
+	if err := diskFields.FromFieldsMap(telegrafJson.Fields); err != nil {
+		log.Printf("解析磁盘字段出错: %v", err)
+		return
+	}
+
+	// 2. 准备数据库模型
+	var diskDb DiskFieldsDb
+	diskDb.FromDiskFields(
+		telegrafJson.Tags["device"],
+		telegrafJson.Tags["fstype"],
+		telegrafJson.Tags["host"],
+		telegrafJson.Tags["mode"],
+		telegrafJson.Tags["path"],
+		telegrafJson.Timestamp,
+		diskFields,
+	)
+
+	// 3. 此处应调用 gorm.DB.Create(&diskDb) 来保存数据
+	log.Printf("准备保存磁盘数据: %+v", diskDb)
 }

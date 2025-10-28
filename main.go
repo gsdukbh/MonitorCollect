@@ -42,14 +42,7 @@ func parseJson(body []byte) {
 		}
 		switch metric.Name {
 		case "cpu":
-			var cpu CPUFields
-			if err := cpu.FromFieldsMap(metric.Fields); err != nil {
-				log.Printf("解析 CPU 字段出错: %v", err)
-				continue
-			}
-			fmt.Printf("CPU %s: 使用率=%.2f%%, 空闲=%.2f%%\n",
-				metric.Tags["cpu"], cpu.UsageActive, cpu.UsageIdle)
-			//todo直接在cpu.go 文件中处理逻辑。 // 其他类型数据同理，可以根据 metric.Name 进行不同的处理
+			SaveCPUToDB(&metric)
 		}
 	}
 }
@@ -169,11 +162,18 @@ func handleLineProtocolMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// 加载配置文件
+	if err := loadConfig("config.json"); err != nil {
+		log.Fatalf("无法加载配置: %v", err)
+	}
+	// 加载数据库
+	initDb()
+
 	// 注册两个不同的端点
 	http.HandleFunc("/metrics/json", handleJsonMetrics)
 	http.HandleFunc("/metrics/lineprotocol", handleLineProtocolMetrics)
 
-	port := "8080"
+	port := config.ServerPort
 	log.Printf("服务器启动，监听在端口 %s, 等待 Telegraf 数据...", port)
 	log.Printf("JSON 格式请配置 url 为: http://localhost:%s/metrics/json", port)
 	log.Printf("Line Protocol 格式请配置 url 为: http://localhost:%s/metrics/lineprotocol", port)
