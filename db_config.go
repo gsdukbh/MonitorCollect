@@ -70,6 +70,22 @@ func initDb() {
 	if err != nil {
 		log.Fatalf("无法连接到数据库: %v", err)
 	}
+	// 首次启动时创建表结构，避免每次启动都执行迁移
+	models := []interface{}{
+		&CPUFieldsDb{},
+		&DiskFieldsDb{},
+		&MemFieldsDb{},
+		&NetInterfaceFieldsDb{},
+		&NetProtoFieldsDb{},
+	}
+	migrator := db.Migrator()
+	for _, model := range models {
+		if !migrator.HasTable(model) {
+			if err := migrator.CreateTable(model); err != nil {
+				log.Fatalf("创建数据库表失败: %v", err)
+			}
+		}
+	}
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("无法从 GORM 获取 sql.DB: %v", err)
