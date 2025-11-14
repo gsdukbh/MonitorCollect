@@ -43,6 +43,14 @@ func parseJson(body []byte) {
 		switch metric.Name {
 		case "cpu":
 			SaveCPUToDB(&metric)
+		case "mem":
+			SaveMemInfo2DB(&metric)
+		case "disk":
+			SaveDiskInfo2DB(&metric)
+		case "net":
+			SaveNetToDB(&metric)
+		default:
+			log.Printf("未知的测量名称: %s", metric.Name)
 		}
 	}
 }
