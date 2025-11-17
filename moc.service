@@ -1,0 +1,21 @@
+[Unit]
+Description=MonitorCollect 指标采集服务
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=monitor
+Group=monitor
+WorkingDirectory=/opt/monitor_collect
+ExecStart=/opt/monitor_collect/monitor_collect
+Restart=on-failure
+RestartSec=5s
+KillSignal=SIGINT
+TimeoutStopSec=15s
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
