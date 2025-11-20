@@ -330,6 +330,10 @@ func SaveNetToDB(metric *TelegrafJson) {
 		)
 		// 此处应调用 gorm.DB.Create(&netDb) 来保存数据
 		log.Printf("准备保存网络接口数据: %+v", netDb)
+		if err := db.Create(&netDb).Error; err != nil {
+			log.Printf("保存内存数据到数据库出错: %v", err)
+			return
+		}
 
 	} else if isInterfaceMetric && iface == "all" {
 		// 处理协议数据
@@ -346,5 +350,9 @@ func SaveNetToDB(metric *TelegrafJson) {
 		)
 		// 此处应调用 gorm.DB.Create(&protoDb) 来保存数据
 		log.Printf("准备保存网络协议数据: %+v", protoDb)
+		if err := db.Create(&protoDb).Error; err != nil {
+			log.Printf("保存内存数据到数据库出错: %v", err)
+			return
+		}
 	}
 }

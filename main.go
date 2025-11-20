@@ -27,10 +27,20 @@ type TelegrafJson struct {
 // parseJson 函数用于解析 JSON 格式的数据
 // Telegraf 发送的是数组格式: [{...}, {...}]
 func parseJson(body []byte) {
-	var metrics []TelegrafJson
-	if err := json.Unmarshal(body, &metrics); err != nil {
-		log.Printf("解析 JSON 出错: %v", err)
-		return
+	var (
+		envelope struct {
+			Metrics []TelegrafJson `json:"metrics"`
+		}
+		metrics []TelegrafJson
+	)
+
+	if err := json.Unmarshal(body, &envelope); err == nil && envelope.Metrics != nil {
+		metrics = envelope.Metrics
+	} else {
+		if err := json.Unmarshal(body, &metrics); err != nil {
+			log.Printf("解析 JSON 出错: %v", err)
+			return
+		}
 	}
 
 	fmt.Println("--- 收到 JSON 格式数据 ---")

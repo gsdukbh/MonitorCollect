@@ -101,4 +101,9 @@ func SaveDiskInfo2DB(telegrafJson *TelegrafJson) {
 
 	// 3. 此处应调用 gorm.DB.Create(&diskDb) 来保存数据
 	log.Printf("准备保存磁盘数据: %+v", diskDb)
+	// 保存到数据库
+	if err := db.Create(&diskDb).Error; err != nil {
+		log.Printf("保存内存数据到数据库出错: %v", err)
+		return
+	}
 }

@@ -16,7 +16,7 @@
 
 3. 编译 Linux arm64 版本
 ```shell
-  env GOOS=linux GOARCH=arm64 go build -o monitor_collect 
+  env GOOS=linux GOARCH=arm64 go build -o monitor_collect_arm64 
 ```
 4. 编译 docker 镜像
 
