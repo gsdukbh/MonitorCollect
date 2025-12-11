@@ -6,10 +6,12 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type DatabaseConfig struct {
@@ -20,10 +22,16 @@ type DatabaseConfig struct {
 	DBName   string `json:"db_name"`
 }
 
+type cronConfig struct {
+	ScheduleDispos string `json:"schedule_dispose"`
+	Enable         bool   `json:"enable"`
+}
+
 type AppConfig struct {
 	ServerPort string         `json:"server_port"`
 	Database   DatabaseConfig `json:"database"`
 	LogLevel   string         `json:"log_level"`
+	Cron       cronConfig     `json:"cron"`
 }
 
 // 全局变量，用于存储加载的配置
@@ -32,7 +40,7 @@ var (
 	config AppConfig
 )
 
-func loadConfig(path string) error {
+func LoadConfig(path string) error {
 	// 打开配置文件
 	configFile, err := os.Open(path)
 	if err != nil {
@@ -56,7 +64,7 @@ func loadConfig(path string) error {
 	return nil
 }
 
-func initDb() {
+func InitDb() {
 	// 从 'config' 变量动态构建 DSN，而不是硬编码
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Database.User,
@@ -65,8 +73,17 @@ func initDb() {
 		config.Database.Port,
 		config.Database.DBName,
 	)
+	cfg := &gorm.Config{
+		Logger: logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags),
+			logger.Config{
+				SlowThreshold: 200 * time.Millisecond,
+				LogLevel:      parseLogLevel(config.LogLevel),
+			},
+		),
+	}
 	var err error
-	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(mysql.Open(dsn), cfg)
 	if err != nil {
 		log.Fatalf("无法连接到数据库: %v", err)
 	}
@@ -76,7 +93,7 @@ func initDb() {
 		&DiskFieldsDb{},
 		&MemFieldsDb{},
 		&NetInterfaceFieldsDb{},
-		&NetProtoFieldsDb{},
+		&NetInterfaceCollectHour{},
 	}
 	migrator := db.Migrator()
 	for _, model := range models {
@@ -96,4 +113,17 @@ func initDb() {
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	log.Printf("成功连接到 MySQL 数据库 (%s@%s)!", config.Database.User, config.Database.Host)
+}
+
+func parseLogLevel(level string) logger.LogLevel {
+	switch strings.ToLower(strings.TrimSpace(level)) {
+	case "silent":
+		return logger.Silent
+	case "error":
+		return logger.Error
+	case "warn", "warning":
+		return logger.Warn
+	default:
+		return logger.Info
+	}
 }

@@ -13,9 +13,6 @@ import (
 	"github.com/influxdata/line-protocol/v2/lineprotocol"
 )
 
-//TIP <p>To run your code, right-click the code and select <b>Run</b>.</p> <p>Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.</p>
-
 type TelegrafJson struct {
 	//telegraf 默认字段
 	Tags      map[string]string      `json:"tags"`
@@ -180,12 +177,15 @@ func handleLineProtocolMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	// 注册数据处理任务。
+	TaskRun()
 	// 加载配置文件
-	if err := loadConfig("config.json"); err != nil {
+	if err := LoadConfig("config.json"); err != nil {
 		log.Fatalf("无法加载配置: %v", err)
 	}
 	// 加载数据库
-	initDb()
+	InitDb()
 
 	// 注册两个不同的端点
 	http.HandleFunc("/metrics/json", handleJsonMetrics)
@@ -199,4 +199,5 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("启动服务器失败: %s\n", err)
 	}
+
 }
