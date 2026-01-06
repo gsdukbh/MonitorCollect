@@ -178,14 +178,14 @@ func handleLineProtocolMetrics(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	// 注册数据处理任务。
-	TaskRun()
 	// 加载配置文件
 	if err := LoadConfig("config.json"); err != nil {
 		log.Fatalf("无法加载配置: %v", err)
 	}
 	// 加载数据库
 	InitDb()
+	// 注册数据处理任务。
+	TaskRun()
 
 	// 注册两个不同的端点
 	http.HandleFunc("/metrics/json", handleJsonMetrics)

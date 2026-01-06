@@ -55,7 +55,8 @@ type NetInterfaceCollectHour struct {
 	Interface string    `gorm:"type:varchar(50);not null;index"`  // 网卡接口名
 	Hour      time.Time // 小时时间戳（格式：YYYYMMDDHH）
 	Total     int64     // 小时内总流量（MB）
-	Speed     int64     // 小时内平均速度（Mbps）
+	Speed     float64   `gorm:"type:decimal(10,2)"` // 小时内平均速度（Mbps）保留两位小数
+	SpeedStr  string    `gorm:"type:varchar(20)"`   // 格式化后的平均速度（e.g., "1.5 Mbps", "500 Kbps"）
 	CreatedAt time.Time // 记录创建时间
 }
 
