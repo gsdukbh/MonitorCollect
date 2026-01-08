@@ -20,6 +20,18 @@ func TaskRun() {
 		if err != nil {
 			return
 		}
+		_, err = c.AddFunc("2 0 * * *", clearDisk)
+		if err != nil {
+			return
+		} // 每天凌晨清理磁盘数据
+		_, err = c.AddFunc("3 1 * * *", clearCpu)
+		if err != nil {
+			return
+		} // 每天凌晨1点清理CPU数据
+		_, err = c.AddFunc("4 2 * * *", clearMem)
+		if err != nil {
+			return
+		} // 每天凌晨2点清理内存数据
 	}
 	c.Start()
 }
@@ -200,9 +212,9 @@ func saveHourData(tx *gorm.DB, data []NetInterfaceCollectHour) error {
 	return tx.CreateInBatches(data, 100).Error
 }
 
-// deleteRawData 删除已处理的原始数据
+// deleteRawData 删除已处理的原始数据,今天之前的数据
 func deleteRawData(tx *gorm.DB, startTime int64) error {
-	return tx.Delete(&NetInterfaceFieldsDb{}, "timestamp > ?", startTime).Error
+	return tx.Where("timestamp < ?", startTime).Delete(&NetInterfaceFieldsDb{}).Error
 }
 
 // formatNetSpeed 将 bits/s 转换为人类可读的字符串 (Kbps, Mbps, Gbps)
@@ -215,4 +227,43 @@ func formatNetSpeed(bps float64) string {
 		return fmt.Sprintf("%.2f Kbps", bps/1000)
 	}
 	return fmt.Sprintf("%.2f bps", bps)
+}
+
+// clearDisk 清理过期磁盘数据
+func clearDisk() {
+	log.Printf("clearDisk 执行中...")
+	columbina := -24 * 30 * time.Hour
+	startTime := time.Now().Add(columbina).Unix()
+
+	// 删除过期数据
+	if err := db.Where("timestamp < ?", startTime).Delete(&DiskFieldsDb{}).Error; err != nil {
+		log.Printf("Failed to clear old disk data: %v", err)
+		return
+	}
+}
+
+// clearCpu 清理过期 CPU 数据
+func clearCpu() {
+	log.Printf("clearCpu 执行中...")
+	columbina := -24 * 30 * time.Hour
+	startTime := time.Now().Add(columbina).Unix()
+
+	// 删除过期数据
+	if err := db.Where("timestamp < ?", startTime).Delete(&CPUFieldsDb{}).Error; err != nil {
+		log.Printf("Failed to clear old CPU data: %v", err)
+		return
+	}
+}
+
+// clearMem 清理过期内存数据
+func clearMem() {
+	log.Printf("clearMem 执行中...")
+	columbina := -24 * 30 * time.Hour
+	startTime := time.Now().Add(columbina).Unix()
+
+	// 删除过期数据
+	if err := db.Where("timestamp < ?", startTime).Delete(&MemFieldsDb{}).Error; err != nil {
+		log.Printf("Failed to clear old Mem data: %v", err)
+		return
+	}
 }

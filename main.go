@@ -158,7 +158,13 @@ func handleLineProtocolMetrics(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "无法解压 Gzip 数据", http.StatusBadRequest)
 			return
 		}
-		defer gzReader.Close()
+		defer func(gzReader *gzip.Reader) {
+			err := gzReader.Close()
+			if err != nil {
+				log.Printf("关闭 Gzip Reader 出错: %v", err)
+				return
+			}
+		}(gzReader)
 		reader = gzReader
 	}
 

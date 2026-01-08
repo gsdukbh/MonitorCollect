@@ -11,8 +11,8 @@ Restart=on-failure
 RestartSec=5s
 KillSignal=SIGINT
 TimeoutStopSec=15s
-StandardOutput=null
-StandardError=null
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
